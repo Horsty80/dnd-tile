@@ -13,6 +13,7 @@ import { snapCenterToCursor, restrictToParentElement } from "@dnd-kit/modifiers"
 const TILE_SIZE = 305;
 const GRID_SIZE = 5;
 const TILE_MARGIN = 4;
+const HEADER_SIZE = 40; // Taille des en-têtes
 
 type Tile = {
   id: string;
@@ -29,6 +30,9 @@ function Tile({
   onDelete,
 }: Tile & { onResize: (id: string) => void; onDelete: (id: string) => void }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id });
+
+  const rowIndices = Array.from({ length: size.h }, (_, i) => position.y + i + 1).join(",");
+  const colIndices = Array.from({ length: size.w }, (_, i) => position.x + i + 1).join(",");
 
   return (
     <div
@@ -49,6 +53,9 @@ function Tile({
       }}
     >
       Tuile {id}
+      <div style={{ fontSize: "0.8rem" }}>
+        Ligne(s): {rowIndices} / Colonne(s): {colIndices}
+      </div>
       <button
         onClick={(e) => {
           e.stopPropagation(); // Empêche la propagation de l'événement de clic
@@ -204,40 +211,30 @@ function resizeTileAndShift(tiles: Tile[], tileId: string) {
     return updated;
   }
 
-  // Décale les tuiles à droite si deltaW > 0
-  if (deltaW > 0) {
-    updated = updated.map((tile) => {
-      if (tile.id !== tileId && tile.position.y === oldTile.position.y) {
-        if (tile.position.x >= oldTile.position.x + oldTile.size.w) {
-          return {
-            ...tile,
-            position: {
-              x: tile.position.x + deltaW,
-              y: tile.position.y,
-            },
-          };
-        }
-      }
-      return tile;
-    });
-  }
+  // Après avoir changé la taille, pour chaque cellule nouvellement acquise :
+  for (let row = oldTile.position.y; row < oldTile.position.y + newSize.h; row++) {
+    for (let col = oldTile.position.x; col < oldTile.position.x + newSize.w; col++) {
+      // Ignore l’ancienne zone
+      if (
+        row < oldTile.position.y + oldTile.size.h &&
+        col < oldTile.position.x + oldTile.size.w
+      ) continue;
 
-  // Décale les tuiles en bas si deltaH > 0
-  if (deltaH > 0) {
-    updated = updated.map((tile) => {
-      if (tile.id !== tileId && tile.position.x === oldTile.position.x) {
-        if (tile.position.y >= oldTile.position.y + oldTile.size.h) {
-          return {
-            ...tile,
-            position: {
-              x: tile.position.x,
-              y: tile.position.y + deltaH,
-            },
-          };
+      // Cherche un occupant dans cette nouvelle cellule
+      const occupant = updated.find((t) =>
+        t.id !== tileId &&
+        col >= t.position.x && col < t.position.x + t.size.w &&
+        row >= t.position.y && row < t.position.y + t.size.h
+      );
+      if (occupant) {
+        // Détermine la direction de poussée en fonction de la position initiale
+        if (col >= oldTile.position.x + oldTile.size.w) {
+          updated = pushTile(updated, occupant.id, 1, 0); // Pousse à droite
+        } else if (row >= oldTile.position.y + oldTile.size.h) {
+          updated = pushTile(updated, occupant.id, 0, 1); // Pousse en bas
         }
       }
-      return tile;
-    });
+    }
   }
 
   return updated;
@@ -351,42 +348,79 @@ export default function Board() {
   );
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragMove={handleDragMove}
-      onDragEnd={handleDragEnd}
-      modifiers={[snapCenterToCursor, restrictToParentElement]} // Add restrictToParentElement modifier
-    >
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          height: "calc(100vh - 50px)",
-          backgroundColor: "#e5e7eb",
-          display: "grid",
-          gridTemplateColumns: `repeat(${GRID_SIZE}, ${TILE_SIZE + TILE_MARGIN}px)`,
-          gridTemplateRows: `repeat(${GRID_SIZE}, ${TILE_SIZE + TILE_MARGIN}px)`,
-        }}
-        onMouseMove={handleHover}
-        onClick={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          const x = Math.floor((e.clientX - rect.left) / (TILE_SIZE + TILE_MARGIN));
-          const y = Math.floor((e.clientY - rect.top) / (TILE_SIZE + TILE_MARGIN));
-          handleAddTile(x, y);
-        }}
+    <div style={{ position: "relative", paddingLeft: HEADER_SIZE, paddingTop: HEADER_SIZE }}>
+      {/* En-têtes colonnes */}
+      {Array.from({ length: GRID_SIZE }, (_, i) => (
+        <div
+          key={"col"+i}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: i * (TILE_SIZE + TILE_MARGIN) + HEADER_SIZE,
+            width: TILE_SIZE,
+            textAlign: "center",
+            fontWeight: "bold",
+            backgroundColor: "#bbb",
+          }}
+        >
+          {i + 1}
+        </div>
+      ))}
+
+      {/* En-têtes lignes */}
+      {Array.from({ length: GRID_SIZE }, (_, i) => (
+        <div
+          key={"row"+i}
+          style={{
+            position: "absolute",
+            top: i * (TILE_SIZE + TILE_MARGIN) + HEADER_SIZE,
+            left: 0,
+            height: TILE_SIZE,
+            display: "flex",
+            alignItems: "center",
+            fontWeight: "bold",
+            backgroundColor: "#bbb",
+            width: HEADER_SIZE,
+          }}
+        >
+          {i + 1}
+        </div>
+      ))}
+
+      <DndContext
+        sensors={sensors}
+        onDragMove={handleDragMove}
+        onDragEnd={handleDragEnd}
+        modifiers={[snapCenterToCursor, restrictToParentElement]}
       >
-        {tiles.map((tile) => (
-          <Tile
-            key={tile.id}
-            id={tile.id}
-            position={tile.position}
-            size={tile.size}
-            onResize={handleResize}
-            onDelete={handleDelete}
-          />
-        ))}
-        {skeleton && <SkeletonTile position={skeleton.position} size={skeleton.size} />}
-      </div>
-    </DndContext>
+        <div
+          style={{
+            position: "relative",
+            display: "grid",
+            gridTemplateColumns: `repeat(${GRID_SIZE}, ${TILE_SIZE + TILE_MARGIN}px)`,
+            gridTemplateRows: `repeat(${GRID_SIZE}, ${TILE_SIZE + TILE_MARGIN}px)`,
+          }}
+          onMouseMove={handleHover}
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) / (TILE_SIZE + TILE_MARGIN));
+            const y = Math.floor((e.clientY - rect.top) / (TILE_SIZE + TILE_MARGIN));
+            handleAddTile(x, y);
+          }}
+        >
+          {tiles.map((tile) => (
+            <Tile
+              key={tile.id}
+              id={tile.id}
+              position={tile.position}
+              size={tile.size}
+              onResize={handleResize}
+              onDelete={handleDelete}
+            />
+          ))}
+          {skeleton && <SkeletonTile position={skeleton.position} size={skeleton.size} />}
+        </div>
+      </DndContext>
+    </div>
   );
 }
