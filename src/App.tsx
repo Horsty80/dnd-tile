@@ -195,79 +195,49 @@ function resizeTileAndShift(tiles: Tile[], tileId: string) {
   const isSmall = oldTile.size.w === 1 && oldTile.size.h === 1;
   const newSize = isSmall ? { w: 3, h: 2 } : { w: 1, h: 1 };
 
-  // Met à jour la tuile
   updated[idx] = { ...oldTile, size: newSize };
-
-  // Si on rétrécit, pas besoin de pousser
   const deltaW = newSize.w - oldTile.size.w;
   const deltaH = newSize.h - oldTile.size.h;
+
+  // Si on rétrécit, on quitte
   if (deltaW <= 0 && deltaH <= 0) {
     return updated;
   }
 
-  // Zone ancienne
-  const oldMinX = oldTile.position.x;
-  const oldMaxX = oldMinX + oldTile.size.w - 1;
-  const oldMinY = oldTile.position.y;
-  const oldMaxY = oldMinY + oldTile.size.h - 1;
-
-  // Zone nouvelle
-  const newMaxX = oldMinX + newSize.w - 1;
-  const newMaxY = oldMinY + newSize.h - 1;
-
-  // On dresse la liste des cellules nouvellement gagnées dans l'ordre (left->right, top->bottom).
-  const gainedCells = [];
-  // Horizontal ?
+  // Décale les tuiles à droite si deltaW > 0
   if (deltaW > 0) {
-    for (let x = oldMaxX + 1; x <= newMaxX; x++) {
-      for (let y = oldMinY; y <= oldMaxY && y <= newMaxY; y++) {
-        gainedCells.push({ x, y });
-      }
-    }
-  }
-  // Vertical ?
-  if (deltaH > 0) {
-    for (let y = oldMaxY + 1; y <= newMaxY; y++) {
-      for (let x = oldMinX; x <= newMaxX; x++) {
-        // Évite de redondance avec la partie horizontale
-        if (x >= oldMinX && x <= oldMaxX + deltaW) {
-          gainedCells.push({ x, y });
+    updated = updated.map((tile) => {
+      if (tile.id !== tileId && tile.position.y === oldTile.position.y) {
+        if (tile.position.x >= oldTile.position.x + oldTile.size.w) {
+          return {
+            ...tile,
+            position: {
+              x: tile.position.x + deltaW,
+              y: tile.position.y,
+            },
+          };
         }
       }
-    }
+      return tile;
+    });
   }
 
-  // On trie gainedCells par x croissant, puis y croissant
-  // => pour garantir un ordre left->right, top->bottom
-  gainedCells.sort((a, b) => {
-    if (a.x === b.x) return a.y - b.y;
-    return a.x - b.x;
-  });
-
-  // Pour chaque cellule, si occupant => on le pousse
-  // Si la tuile s'étend en largeur, on pousse occupant vers la droite
-  // Si la tuile s'étend en hauteur, on pousse occupant vers le bas
-  for (const cell of gainedCells) {
-    // Cherche occupant
-    const occupant = updated.find(
-      (t) =>
-        t.id !== tileId &&
-        cell.x >= t.position.x &&
-        cell.x < t.position.x + t.size.w &&
-        cell.y >= t.position.y &&
-        cell.y < t.position.y + t.size.h
-    );
-    if (occupant) {
-      // On détermine la direction : on regarde si x>oldMaxX => push droite, sinon push bas
-      let dx = 0;
-      let dy = 0;
-      if (cell.x > oldMaxX) {
-        dx = 1; // on pousse vers la droite
-      } else {
-        dy = 1; // on pousse vers le bas
+  // Décale les tuiles en bas si deltaH > 0
+  if (deltaH > 0) {
+    updated = updated.map((tile) => {
+      if (tile.id !== tileId && tile.position.x === oldTile.position.x) {
+        if (tile.position.y >= oldTile.position.y + oldTile.size.h) {
+          return {
+            ...tile,
+            position: {
+              x: tile.position.x,
+              y: tile.position.y + deltaH,
+            },
+          };
+        }
       }
-      updated = pushTile(updated, occupant.id, dx, dy);
-    }
+      return tile;
+    });
   }
 
   return updated;
