@@ -7,8 +7,15 @@ import {
   PointerSensor,
   DragMoveEvent,
   DragEndEvent,
+  closestCenter,
 } from "@dnd-kit/core";
 import { snapCenterToCursor, restrictToParentElement } from "@dnd-kit/modifiers";
+
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 const TILE_SIZE = 305;
 const GRID_SIZE = 5;
@@ -391,7 +398,12 @@ export default function Board() {
         sensors={sensors}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
-        modifiers={[snapCenterToCursor, restrictToParentElement]}
+        modifiers={[restrictToParentElement]}
+      >
+
+      <SortableContext 
+        items={tiles}
+        strategy={verticalListSortingStrategy}
       >
         <div
           style={{
@@ -420,6 +432,8 @@ export default function Board() {
           ))}
           {skeleton && <SkeletonTile position={skeleton.position} size={skeleton.size} />}
         </div>
+
+      </SortableContext>
       </DndContext>
     </div>
   );
