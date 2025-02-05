@@ -21,7 +21,7 @@ import {
 } from "@dnd-kit/sortable";
 import { restrictToParentElement } from "@dnd-kit/modifiers";
 
-export const TILE_SIZE = 200;
+export const TILE_SIZE = 120;
 
 type Tile = {
   id: string;
@@ -140,7 +140,7 @@ export default function App() {
               return tile;
           }
 
-          // Check for collisions and shift adjacent tiles if necessary
+          // Check for collisions and shift all tiles if necessary
           oldItems.forEach((otherTile) => {
             if (otherTile.id !== id) {
               let collisionX = otherTile.x;
@@ -160,10 +160,18 @@ export default function App() {
                 }
               }
 
-              if (collisionX !== otherTile.x || collisionY !== otherTile.y) {
-                otherTile.x = collisionX;
-                otherTile.y = collisionY;
+              // Ensure the new position is not occupied
+              while (isPositionOccupied(collisionX, collisionY, oldItems, otherTile.id)) {
+                if (direction === "horizontal" || direction === "both") {
+                  collisionX += 1;
+                }
+                if (direction === "vertical" || direction === "both") {
+                  collisionY += 1;
+                }
               }
+
+              otherTile.x = collisionX;
+              otherTile.y = collisionY;
             }
           });
 
