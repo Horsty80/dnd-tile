@@ -52,7 +52,11 @@ export default function App() {
   }
 
   function isPositionOccupied(x: number, y: number, items: Tile[], ignoreTileId?: string): boolean {
-    return items.some((item) => item.x === x && item.y === y && item.id !== ignoreTileId);
+    return items.some((item) => {
+      const withinX = x >= item.x && x < item.x + item.w / TILE_SIZE;
+      const withinY = y >= item.y && y < item.y + item.h / TILE_SIZE;
+      return withinX && withinY && item.id !== ignoreTileId;
+    });
   }
 
   function handleDragMove(event: DragMoveEvent) {
