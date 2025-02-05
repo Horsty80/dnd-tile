@@ -35,8 +35,7 @@ export default function App() {
   const [items, setItems] = useState<Tile[]>([]);
   const [skeleton, setSkeleton] = useState<{ x: number; y: number } | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
-
-
+  const [moveOverlay, setMoveOverlay] = useState<{ x: number; y: number } | null>(null);
 
   function handleDragStart({ active }: DragStartEvent) {
     setActiveId(active.id.toString());
@@ -52,8 +51,8 @@ export default function App() {
     );
   }
 
-  function isPositionOccupied(x: number, y: number, items: Tile[]): boolean {
-    return items.some((item) => item.x === x && item.y === y);
+  function isPositionOccupied(x: number, y: number, items: Tile[], ignoreTileId?: string): boolean {
+    return items.some((item) => item.x === x && item.y === y && item.id !== ignoreTileId);
   }
 
   function handleDragMove(event: DragMoveEvent) {
@@ -67,21 +66,30 @@ export default function App() {
       const newY = Math.round((tile.y * TILE_SIZE + delta.y) / TILE_SIZE);
 
       if (isPositionOccupied(newX, newY, oldItems)) {
-        setSkeleton(null);
+        let collisionX = newX;
+        let collisionY = newY;
+
+        // Push to the right
+        while (isPositionOccupied(collisionX, collisionY, oldItems)) {
+          collisionX += 1;
+        }
+
+        if (tile.x !== newX || tile.y !== newY) {
+          setMoveOverlay({ x: collisionX, y: collisionY });
+        } else {
+          setMoveOverlay(null);
+        }
       } else {
-        setSkeleton({ x: newX, y: newY });
+        setMoveOverlay(null);
       }
+      setSkeleton({ x: newX, y: newY });
 
       return oldItems;
     });
   }
 
   function handleDragEnd(event: DragEndEvent) {
-    const { active, delta, collisions, over } = event;
-    console.log("Active", active);
-    console.log("Delta", delta);
-    console.log("Collisions", collisions);
-    console.log("Over", over);
+    const { active, delta } = event;
 
     // Update x,y of the active tile
     setItems((oldItems) => {
@@ -90,10 +98,26 @@ export default function App() {
       const tile = newTiles[idx];
       const newX = Math.round((tile.x * TILE_SIZE + delta.x) / TILE_SIZE);
       const newY = Math.round((tile.y * TILE_SIZE + delta.y) / TILE_SIZE);
+
+      if (isPositionOccupied(newX, newY, newTiles, active.id.toString())) {
+        let collisionX = newX;
+        let collisionY = newY;
+
+        // Push to the right
+        while (isPositionOccupied(collisionX, collisionY, newTiles, active.id.toString())) {
+          collisionX += 1;
+        }
+
+        const collisionIdx = newTiles.findIndex((tile) => tile.x === newX && tile.y === newY);
+        newTiles[collisionIdx] = { ...newTiles[collisionIdx], x: collisionX, y: collisionY };
+      }
+
       newTiles[idx] = { ...tile, x: newX, y: newY };
       return newTiles;
     });
     setActiveId(null);
+    setSkeleton(null); // Clear the skeleton overlay
+    setMoveOverlay(null); // Clear the move overlay
   }
 
   const sensors = useSensors(
@@ -139,7 +163,7 @@ export default function App() {
         onDragMove={handleDragMove}
         modifiers={[restrictToParentElement]}
       >
-        <SortableContext items={items}>
+        {/* <SortableContext items={items} strategy={() => null}> */}
           <div
             style={{
               position: "relative",
@@ -167,8 +191,21 @@ export default function App() {
                 }}
               />
             )}
+            {moveOverlay && (
+              <div
+                style={{
+                  position: "absolute",
+                  backgroundColor: "rgba(255,0,0,0.2)",
+                  left: moveOverlay.x * TILE_SIZE,
+                  top: moveOverlay.y * TILE_SIZE,
+                  width: TILE_SIZE,
+                  height: TILE_SIZE,
+                  borderRadius: "2px",
+                }}
+              />
+            )}
           </div>
-        </SortableContext>
+        {/* </SortableContext> */}
 
         <DragOverlay>{activeId ? <DragOverlayItem id={activeId} /> : null}</DragOverlay>
       </DndContext>
