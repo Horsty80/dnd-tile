@@ -65,12 +65,12 @@ export default function App() {
       const newX = Math.round((tile.x * TILE_SIZE + delta.x) / TILE_SIZE);
       const newY = Math.round((tile.y * TILE_SIZE + delta.y) / TILE_SIZE);
 
-      if (isPositionOccupied(newX, newY, oldItems)) {
+      if (isPositionOccupied(newX, newY, oldItems, active.id.toString())) {
         let collisionX = newX;
         let collisionY = newY;
 
         // Push to the right
-        while (isPositionOccupied(collisionX, collisionY, oldItems)) {
+        while (isPositionOccupied(collisionX, collisionY, oldItems, active.id.toString())) {
           collisionX += 1;
         }
 
