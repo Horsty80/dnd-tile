@@ -206,6 +206,7 @@ test("Aggrandissement d'une tuile, vérifie que ça décale les autres", () => {
     { id: "a", x: 0, width: 1 },
     { id: "b", x: 1, width: 1 },
     { id: "c", x: 2, width: 1 },
+    { id: "e", x: 3, width: 1 },
     { id: "d", x: 6, width: 1 },
   ];
   const expectedTiles = [
@@ -214,10 +215,41 @@ test("Aggrandissement d'une tuile, vérifie que ça décale les autres", () => {
     { id: "b", x: 2, width: 1 }, // b is pushed to x axis 2
     // 'c' pushed to x:3
     { id: "c", x: 3, width: 1 }, // c is pushed to x axis 3
+    // 'e' pushed to x:4
+    { id: "e", x: 4, width: 1 }, // e is pushed to x axis 4
     { id: "d", x: 6, width: 1 }, // d is not in the collision path and remains at x axis 6
   ];
   // Resize 'a' to width:2 and check collision
   const resized = resizeTile(givenTiles, "a", 2);
+  // Collision logic could be inserted here if needed
+  // ...existing code...
+  expect(resized).toEqual(expectedTiles);
+});
+
+test("Avec plus de tuile et aggrandissement plus grand, Aggrandissement d'une tuile, vérifie que ça décale les autres", () => {
+  const givenTiles = [
+    { id: "a", x: 0, width: 1 },
+    { id: "b", x: 1, width: 1 },
+    { id: "c", x: 2, width: 1 },
+    { id: "d", x: 3, width: 1 },
+    { id: "e", x: 4, width: 1 },
+    { id: "f", x: 5, width: 1 },
+    { id: "g", x: 6, width: 1 },
+  ];
+  const expectedTiles = [
+    { id: "a", x: 0, width: 3 }, // a takes 2 units on x axis 0 and 1
+    // 'b' pushed to x:2
+    { id: "b", x: 3, width: 1 }, // b is pushed to x axis 2
+    // 'c' pushed to x:3
+    { id: "c", x: 4, width: 1 }, // c is pushed to x axis 3
+    // 'e' pushed to x:4
+    { id: "d", x: 5, width: 1 }, // e is pushed to x axis 4
+    { id: "e", x: 6, width: 1 }, // d is not in the collision path and remains at x axis 6
+    { id: "f", x: 7, width: 1 }, // f is not in the collision path and remains at x axis 7
+    { id: "g", x: 8, width: 1 }, // g is not in the collision path and remains at x axis 8
+  ];
+  // Resize 'a' to width:2 and check collision
+  const resized = resizeTile(givenTiles, "a", 3);
   // Collision logic could be inserted here if needed
   // ...existing code...
   expect(resized).toEqual(expectedTiles);
