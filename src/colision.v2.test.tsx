@@ -254,3 +254,35 @@ test("Avec plus de tuile et aggrandissement plus grand, Aggrandissement d'une tu
   // ...existing code...
   expect(resized).toEqual(expectedTiles);
 });
+
+test("J'aggrandi une tuile et je la déplace vers une celulle vide, vérifie que c'est bon", () => {
+  const givenTiles = [
+    { id: "a", x: 0, width: 1 },
+    { id: "b", x: 1, width: 1 },
+    { id: "c", x: 2, width: 1 },
+    { id: "d", x: 3, width: 1 },
+    { id: "e", x: 4, width: 1 },
+  ];
+  const expectedResizedTiles = [
+    { id: "a", x: 0, width: 2 },
+    { id: "b", x: 2, width: 1 },
+    { id: "c", x: 3, width: 1 },
+    { id: "d", x: 4, width: 1 },
+    { id: "e", x: 5, width: 1 },
+  ];
+
+  const expectedTiles = [
+    { id: "b", x: 2, width: 1 },
+    { id: "c", x: 3, width: 1 },
+    { id: "d", x: 4, width: 1 },
+    { id: "e", x: 5, width: 1 },
+    { id: "a", x: 7, width: 2 },
+  ];
+  // Resize 'a' to width:2 and check collision
+  const resized = resizeTile(givenTiles, "a", 2);
+  expect(resized).toEqual(expectedResizedTiles);
+  // Move 'a' to x:7
+  const moved = moveCellToPosition(resized, "a", 7);
+  expect(moved).toEqual(expectedTiles);
+});
+
