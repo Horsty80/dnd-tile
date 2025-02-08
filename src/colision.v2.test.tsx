@@ -53,8 +53,27 @@ export function resizeTile(tiles: Tile[], tileId: string, newWidth: number): Til
   const resizedTile = { ...tile, width: newWidth };
   let updatedTiles = tiles.map((t) => (t.id === tileId ? resizedTile : t));
 
+  // Détermine les cellules occupées par la tuile redimensionnée
+  const occupiedCells = new Set<number>();
+  for (let i = resizedTile.x; i < resizedTile.x + newWidth; i++) {
+    occupiedCells.add(i);
+  }
+
   // Décale les tuiles qui se superposent
-  updatedTiles = shiftOverlappingTiles(updatedTiles, resizedTile);
+  updatedTiles.forEach((t) => {
+    if (t.id !== tileId) {
+      let newX = t.x;
+      while (occupiedCells.has(newX)) {
+        newX++;
+      }
+      if (newX !== t.x) {
+        t.x = newX;
+        for (let i = newX; i < newX + t.width; i++) {
+          occupiedCells.add(i);
+        }
+      }
+    }
+  });
 
   return updatedTiles;
 }
