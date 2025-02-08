@@ -1,4 +1,4 @@
-import { TILE_MARGIN, TILE_SIZE } from "./App";
+import { TILE_MARGIN, TILE_SIZE } from "./App2";
 
 type SkeletonProps = {
     x: number;
