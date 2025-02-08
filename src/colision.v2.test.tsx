@@ -311,3 +311,34 @@ test("J'aggrandi une tuile et je la déplace vers une celulle vide, vérifie que
   const moved = moveCellToPosition(resized, "a", 7);
   expect(moved).toEqual(expectedTiles);
 });
+
+test("J'aggrandi une tuile et je la déplace vers une celulle occupé, vérifie que c'est bon", () => {
+  const givenTiles = [
+    { id: "a", x: 0, width: 1, occupiedCells: new Set<number>().add(0) },
+    { id: "b", x: 1, width: 1, occupiedCells: new Set<number>().add(1) },
+    { id: "c", x: 2, width: 1, occupiedCells: new Set<number>().add(2) },
+    { id: "d", x: 3, width: 1, occupiedCells: new Set<number>().add(3) },
+    { id: "e", x: 4, width: 1, occupiedCells: new Set<number>().add(4) },
+  ];
+  const expectedResizedTiles = [
+    { id: "a", x: 0, width: 3, occupiedCells: new Set<number>().add(0).add(1).add(2) },
+    { id: "b", x: 3, width: 1, occupiedCells: new Set<number>().add(3) },
+    { id: "c", x: 4, width: 1, occupiedCells: new Set<number>().add(4) },
+    { id: "d", x: 5, width: 1, occupiedCells: new Set<number>().add(5) },
+    { id: "e", x: 6, width: 1, occupiedCells: new Set<number>().add(6) },
+  ];
+
+  const actualResized = resizeTile(givenTiles, "a", 3);
+  expect(actualResized).toEqual(expectedResizedTiles);
+
+  const expectedTiles = [
+    { id: "b", x: 2, width: 1, occupiedCells: new Set<number>().add(2) },
+    { id: "c", x: 6, width: 1, occupiedCells: new Set<number>().add(6) },
+    { id: "d", x: 7, width: 1, occupiedCells: new Set<number>().add(7) },
+    { id: "e", x: 8, width: 1, occupiedCells: new Set<number>().add(8) },
+    { id: "a", x: 3, width: 3, occupiedCells: new Set<number>().add(3).add(4).add(5) },
+  ];
+  // Move 'a' to x:3 so b is not move, but c, d and e are moved to the right
+  const actual = moveCellToPosition(actualResized, "a", 3);
+  expect(actual).toEqual(expectedTiles);
+});
