@@ -96,7 +96,7 @@ export default function App() {
     let hasCollision = true;
     while (hasCollision) {
       hasCollision = false;
-      items = items.map((tile, idx) => {
+      items = items.map((tile) => {
         let newX = tile.x;
         let newY = tile.y;
 
