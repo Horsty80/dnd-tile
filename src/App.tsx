@@ -53,12 +53,18 @@ export default function App() {
     );
   }
 
-  // Check if a position is occupied by any tile
+  // Check if a position is occupied by any tile, considering the size of the tiles
   function isPositionOccupied(x: number, y: number, items: Tile[], ignoreTileId?: string): boolean {
     return items.some((item) => {
-      const withinX = x >= item.x && x < item.x + item.w / TILE_SIZE;
-      const withinY = y >= item.y && y < item.y + item.h / TILE_SIZE;
-      return withinX && withinY && item.id !== ignoreTileId;
+      const rect1 = { x, y, w: TILE_SIZE, h: TILE_SIZE };
+      const rect2 = { x: item.x, y: item.y, w: item.w, h: item.h };
+
+      const isColliding =
+        rect1.x < rect2.x + rect2.w / TILE_SIZE &&
+        rect1.x + rect1.w / TILE_SIZE > rect2.x &&
+        rect1.y < rect2.y + rect2.h / TILE_SIZE &&
+        rect1.y + rect1.h / TILE_SIZE > rect2.y;
+      return isColliding && item.id !== ignoreTileId;
     });
   }
 
@@ -150,20 +156,23 @@ export default function App() {
           isPositionOccupied(otherTile.x, otherTile.y, newTiles, otherTile.id)
         ) {
           let newOtherX = otherTile.x;
-          if (newX - tile.x < 0) {
-            // Active tile was to the right and is being moved to the left
-            newOtherX = otherTile.x + 1;
-            while (isPositionOccupied(newOtherX, otherTile.y, newTiles, otherTile.id)) {
-              newOtherX += 1;
-            }
-          } else {
-            // Active tile was to the left and is being moved to the right
-            newOtherX = otherTile.x + (newX - tile.x);
-            while (isPositionOccupied(newOtherX, otherTile.y, newTiles, otherTile.id)) {
-              newOtherX += 1;
-            }
+          let newOtherY = otherTile.y;
+
+          while (
+            newOtherX < tile.x + tile.w / TILE_SIZE &&
+            newOtherX + otherTile.w / TILE_SIZE > tile.x &&
+            newOtherY < tile.y + tile.h / TILE_SIZE &&
+            newOtherY + otherTile.h / TILE_SIZE > tile.y
+          ) {
+            newOtherX += 1;
           }
-          newTiles[otherIdx] = { ...otherTile, x: newOtherX };
+
+          // Ensure the new position is not occupied
+          while (isPositionOccupied(newOtherX, newOtherY, newTiles, otherTile.id)) {
+            newOtherX += 1;
+          }
+
+          newTiles[otherIdx] = { ...otherTile, x: newOtherX, y: newOtherY };
         }
       });
 
