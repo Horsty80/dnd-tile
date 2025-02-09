@@ -13,11 +13,7 @@ import {
   DragMoveEvent,
 } from "@dnd-kit/core";
 
-import {
-  useSortable,
-  arrayMove,
-  sortableKeyboardCoordinates,
-} from "@dnd-kit/sortable";
+import { useSortable, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { restrictToParentElement } from "@dnd-kit/modifiers";
 
 export const TILE_SIZE = 120;
@@ -34,7 +30,12 @@ export default function App() {
   const [items, setItems] = useState<Tile[]>([]);
   const [skeleton, setSkeleton] = useState<{ x: number; y: number } | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [moveOverlay, setMoveOverlay] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const [moveOverlay, setMoveOverlay] = useState<{
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  } | null>(null);
 
   function handleDragStart({ active }: DragStartEvent) {
     setActiveId(active.id.toString());
@@ -119,10 +120,23 @@ export default function App() {
 
       // Handle overlapping tiles
       newTiles.forEach((otherTile, otherIdx) => {
-        if (otherIdx !== idx && isPositionOccupied(otherTile.x, otherTile.y, newTiles, otherTile.id)) {
-          let newOtherX = otherTile.x + (newX - tile.x);
-          while (isPositionOccupied(newOtherX, otherTile.y, newTiles, otherTile.id)) {
-            newOtherX += 1;
+        if (
+          otherIdx !== idx &&
+          isPositionOccupied(otherTile.x, otherTile.y, newTiles, otherTile.id)
+        ) {
+          let newOtherX = otherTile.x;
+          if (newX - tile.x < 0) {
+            // Active tile was to the right and is being moved to the left
+            newOtherX = otherTile.x + 1;
+            while (isPositionOccupied(newOtherX, otherTile.y, newTiles, otherTile.id)) {
+              newOtherX += 1;
+            }
+          } else {
+            // Active tile was to the left and is being moved to the right
+            newOtherX = otherTile.x + (newX - tile.x);
+            while (isPositionOccupied(newOtherX, otherTile.y, newTiles, otherTile.id)) {
+              newOtherX += 1;
+            }
           }
           newTiles[otherIdx] = { ...otherTile, x: newOtherX };
         }
@@ -284,7 +298,17 @@ export default function App() {
           onClick={handleClick}
         >
           {items.map(({ id, x, y, h, w }) => (
-            <Item key={id} id={id} activeId={activeId} x={x} y={y} h={h} w={w} handleEnlargeTile={handleEnlargeTile} handleResetTileSize={handleResetTileSize} />
+            <Item
+              key={id}
+              id={id}
+              activeId={activeId}
+              x={x}
+              y={y}
+              h={h}
+              w={w}
+              handleEnlargeTile={handleEnlargeTile}
+              handleResetTileSize={handleResetTileSize}
+            />
           ))}
           {skeleton && (
             <div
@@ -293,8 +317,8 @@ export default function App() {
                 backgroundColor: "rgba(0,0,0,0.2)",
                 left: skeleton.x * TILE_SIZE,
                 top: skeleton.y * TILE_SIZE,
-                width: activeId ? items.find(item => item.id === activeId)?.w : TILE_SIZE,
-                height: activeId ? items.find(item => item.id === activeId)?.h : TILE_SIZE,
+                width: activeId ? items.find((item) => item.id === activeId)?.w : TILE_SIZE,
+                height: activeId ? items.find((item) => item.id === activeId)?.h : TILE_SIZE,
                 borderRadius: "2px",
               }}
             />
@@ -372,49 +396,50 @@ function Item({ id, activeId, x, y, h, w, handleEnlargeTile, handleResetTileSize
       {...attributes}
       {...listeners}
     >
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-      }}>
-
-      <span>
-        x: {x}, y: {y}
-      </span>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleEnlargeTile(id, "horizontal");
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
         }}
+      >
+        <span>
+          x: {x}, y: {y}
+        </span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleEnlargeTile(id, "horizontal");
+          }}
         >
-        Enlarge Horizontally
-      </button>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleEnlargeTile(id, "vertical");
-        }}
+          Enlarge Horizontally
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleEnlargeTile(id, "vertical");
+          }}
         >
-        Enlarge Vertically
-      </button>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleEnlargeTile(id, "both");
-        }}
+          Enlarge Vertically
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleEnlargeTile(id, "both");
+          }}
         >
-        Enlarge Both
-      </button>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleResetTileSize(id);
-        }}
+          Enlarge Both
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleResetTileSize(id);
+          }}
         >
-        Reset Size
-      </button>
-        </div>
+          Reset Size
+        </button>
+      </div>
     </motion.div>
   );
 }
@@ -438,7 +463,6 @@ function DragOverlayItem(props: { id: string }) {
     />
   );
 }
-
 
 function generateRandomHexCode() {
   let n = (Math.random() * 0xfffff * 1000000).toString(16);
