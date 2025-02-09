@@ -116,6 +116,18 @@ export default function App() {
       }
 
       newTiles[idx] = { ...tile, x: newX, y: newY };
+
+      // Handle overlapping tiles
+      newTiles.forEach((otherTile, otherIdx) => {
+        if (otherIdx !== idx && isPositionOccupied(otherTile.x, otherTile.y, newTiles, otherTile.id)) {
+          let newOtherX = otherTile.x + (newX - tile.x);
+          while (isPositionOccupied(newOtherX, otherTile.y, newTiles, otherTile.id)) {
+            newOtherX += 1;
+          }
+          newTiles[otherIdx] = { ...otherTile, x: newOtherX };
+        }
+      });
+
       return newTiles;
     });
     setActiveId(null);
