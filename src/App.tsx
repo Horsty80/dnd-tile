@@ -55,8 +55,12 @@ export default function App() {
 
   // Check if a position is occupied by any tile, considering the size of the tiles
   function isPositionOccupied(x: number, y: number, items: Tile[], ignoreTileId?: string): boolean {
+    const ignoredTile = items.find((item) => item.id === ignoreTileId);
+    const ignoredTileWidth = ignoredTile ? ignoredTile.w : TILE_SIZE;
+    const ignoredTileHeight = ignoredTile ? ignoredTile.h : TILE_SIZE;
+    
     return items.some((item) => {
-      const rect1 = { x, y, w: TILE_SIZE, h: TILE_SIZE };
+      const rect1 = { x, y, w: ignoredTileWidth, h: ignoredTileHeight };
       const rect2 = { x: item.x, y: item.y, w: item.w, h: item.h };
 
       const isColliding =
@@ -81,7 +85,7 @@ export default function App() {
 
       if (isPositionOccupied(newX, newY, oldItems, active.id.toString())) {
         let collisionX = newX;
-        let collisionY = newY;
+        const collisionY = newY;
 
         // Push to the right
         while (isPositionOccupied(collisionX, collisionY, oldItems, active.id.toString())) {
@@ -109,7 +113,7 @@ export default function App() {
       hasCollision = false;
       items = items.map((tile) => {
         let newX = tile.x;
-        let newY = tile.y;
+        const newY = tile.y;
 
         while (isPositionOccupied(newX, newY, items, tile.id)) {
           hasCollision = true;
@@ -136,7 +140,7 @@ export default function App() {
 
       if (isPositionOccupied(newX, newY, newTiles, active.id.toString())) {
         let collisionX = newX;
-        let collisionY = newY;
+        const collisionY = newY;
 
         // Push to the right
         while (isPositionOccupied(collisionX, collisionY, newTiles, active.id.toString())) {
@@ -156,7 +160,7 @@ export default function App() {
           isPositionOccupied(otherTile.x, otherTile.y, newTiles, otherTile.id)
         ) {
           let newOtherX = otherTile.x;
-          let newOtherY = otherTile.y;
+          const newOtherY = otherTile.y;
 
           while (
             newOtherX < tile.x + tile.w / TILE_SIZE &&
@@ -188,7 +192,7 @@ export default function App() {
     setItems((oldItems) => {
       const newItems = oldItems.map((tile) => {
         if (tile.id === id) {
-          let newTile = { ...tile };
+          const newTile = { ...tile };
           const directions = direction === "both" ? ["horizontal", "vertical"] : [direction];
 
           directions.forEach((dir) => {
