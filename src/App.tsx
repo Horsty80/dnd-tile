@@ -244,7 +244,7 @@ export default function App() {
         return tile;
       });
 
-      return newItems;
+      return resolveCollisions(newItems); // Ensure no collisions remain
     });
   }
 
