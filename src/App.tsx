@@ -81,12 +81,12 @@ export default function App() {
         while (isPositionOccupied(collisionX, collisionY, oldItems, active.id.toString())) {
           collisionX += 1;
         }
-
         if (tile.x !== newX || tile.y !== newY) {
           setMoveOverlay({ x: collisionX, y: collisionY, w: tile.w, h: tile.h });
         } else {
           setMoveOverlay(null);
         }
+
       } else {
         setMoveOverlay(null);
       }
@@ -313,7 +313,6 @@ export default function App() {
         onDragMove={handleDragMove}
         modifiers={[restrictToParentElement]}
       >
-        {/* <SortableContext items={items} strategy={() => null}> */}
         <div
           style={{
             position: "relative",
@@ -365,7 +364,6 @@ export default function App() {
             />
           )}
         </div>
-        {/* </SortableContext> */}
 
         <DragOverlay>{activeId ? <DragOverlayItem id={activeId} /> : null}</DragOverlay>
       </DndContext>
