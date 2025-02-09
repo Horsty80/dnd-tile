@@ -37,10 +37,12 @@ export default function App() {
     h: number;
   } | null>(null);
 
+  // Handle the start of a drag event
   function handleDragStart({ active }: DragStartEvent) {
     setActiveId(active.id.toString());
   }
 
+  // Handle the drag over event
   function handleDragOver({ active, over }: DragEndEvent) {
     setItems((items) =>
       arrayMove(
@@ -51,6 +53,7 @@ export default function App() {
     );
   }
 
+  // Check if a position is occupied by any tile
   function isPositionOccupied(x: number, y: number, items: Tile[], ignoreTileId?: string): boolean {
     return items.some((item) => {
       const withinX = x >= item.x && x < item.x + item.w / TILE_SIZE;
@@ -59,6 +62,7 @@ export default function App() {
     });
   }
 
+  // Handle the drag move event
   function handleDragMove(event: DragMoveEvent) {
     const { active, delta } = event;
 
@@ -92,6 +96,7 @@ export default function App() {
     });
   }
 
+  // Resolve collisions by adjusting tile positions
   function resolveCollisions(items: Tile[]): Tile[] {
     let hasCollision = true;
     while (hasCollision) {
@@ -111,6 +116,7 @@ export default function App() {
     return items;
   }
 
+  // Handle the end of a drag event
   function handleDragEnd(event: DragEndEvent) {
     const { active, delta } = event;
 
@@ -168,6 +174,7 @@ export default function App() {
     setMoveOverlay(null); // Clear the move overlay
   }
 
+  // Handle enlarging a tile
   function handleEnlargeTile(id: string, direction: "horizontal" | "vertical" | "both") {
     setItems((oldItems) => {
       const newItems = oldItems.map((tile) => {
@@ -232,6 +239,7 @@ export default function App() {
     });
   }
 
+  // Handle resetting a tile's size
   function handleResetTileSize(id: string) {
     setItems((oldItems) =>
       oldItems.map((tile) => {
@@ -255,6 +263,7 @@ export default function App() {
     })
   );
 
+  // Handle hover event to show skeleton overlay
   const handleHover = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = Math.floor((e.clientX - rect.left) / TILE_SIZE);
@@ -273,8 +282,8 @@ export default function App() {
     }
   };
 
+  // Handle click event to add a new tile
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // add an item
     const rect = e.currentTarget.getBoundingClientRect();
     const x = Math.floor((e.clientX - rect.left) / TILE_SIZE);
     const y = Math.floor((e.clientY - rect.top) / TILE_SIZE);
@@ -375,6 +384,7 @@ type ItemProps = {
   handleResetTileSize: (id: string) => void;
 };
 
+// Component for individual tile item
 function Item({ id, activeId, x, y, h, w, handleEnlargeTile, handleResetTileSize }: ItemProps) {
   const sortable = useSortable({
     id,
@@ -463,6 +473,7 @@ function Item({ id, activeId, x, y, h, w, handleEnlargeTile, handleResetTileSize
   );
 }
 
+// Component for the drag overlay
 function DragOverlayItem(props: { id: string }) {
   const { id } = props;
   const context = useDndContext();
@@ -483,6 +494,7 @@ function DragOverlayItem(props: { id: string }) {
   );
 }
 
+// Generate a random hex color code
 function generateRandomHexCode() {
   let n = (Math.random() * 0xfffff * 1000000).toString(16);
   return "#" + n.slice(0, 6);
