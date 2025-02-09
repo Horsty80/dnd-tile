@@ -128,54 +128,54 @@ export default function App() {
       const newItems = oldItems.map((tile) => {
         if (tile.id === id) {
           let newTile = { ...tile };
-          switch (direction) {
-            case "horizontal":
-              newTile.w += 3 * TILE_SIZE;
-              break;
-            case "vertical":
-              newTile.h += 2 * TILE_SIZE;
-              break;
-            case "both":
-              newTile.w += 3 * TILE_SIZE;
-              newTile.h += 2 * TILE_SIZE;
-              break;
-            default:
-              return tile;
-          }
+          const directions = direction === "both" ? ["horizontal", "vertical"] : [direction];
 
-          // Check for collisions and shift all tiles if necessary
-          oldItems.forEach((otherTile) => {
-            if (otherTile.id !== id) {
-              let collisionX = otherTile.x;
-              let collisionY = otherTile.y;
-
-              while (
-                collisionX < newTile.x + newTile.w / TILE_SIZE &&
-                collisionX + otherTile.w / TILE_SIZE > newTile.x &&
-                collisionY < newTile.y + newTile.h / TILE_SIZE &&
-                collisionY + otherTile.h / TILE_SIZE > newTile.y
-              ) {
-                if (direction === "horizontal" || direction === "both") {
-                  collisionX += 1;
-                }
-                if (direction === "vertical" || direction === "both") {
-                  collisionY += 1;
-                }
-              }
-
-              // Ensure the new position is not occupied
-              while (isPositionOccupied(collisionX, collisionY, oldItems, otherTile.id)) {
-                if (direction === "horizontal" || direction === "both") {
-                  collisionX += 1;
-                }
-                if (direction === "vertical" || direction === "both") {
-                  collisionY += 1;
-                }
-              }
-
-              otherTile.x = collisionX;
-              otherTile.y = collisionY;
+          directions.forEach((dir) => {
+            switch (dir) {
+              case "horizontal":
+                newTile.w += 3 * TILE_SIZE;
+                break;
+              case "vertical":
+                newTile.h += 2 * TILE_SIZE;
+                break;
+              default:
+                return tile;
             }
+
+            // Check for collisions and shift all tiles if necessary
+            oldItems.forEach((otherTile) => {
+              if (otherTile.id !== id) {
+                let collisionX = otherTile.x;
+                let collisionY = otherTile.y;
+
+                while (
+                  collisionX < newTile.x + newTile.w / TILE_SIZE &&
+                  collisionX + otherTile.w / TILE_SIZE > newTile.x &&
+                  collisionY < newTile.y + newTile.h / TILE_SIZE &&
+                  collisionY + otherTile.h / TILE_SIZE > newTile.y
+                ) {
+                  if (dir === "horizontal") {
+                    collisionX += 1;
+                  }
+                  if (dir === "vertical") {
+                    collisionY += 1;
+                  }
+                }
+
+                // Ensure the new position is not occupied
+                while (isPositionOccupied(collisionX, collisionY, oldItems, otherTile.id)) {
+                  if (dir === "horizontal") {
+                    collisionX += 1;
+                  }
+                  if (dir === "vertical") {
+                    collisionY += 1;
+                  }
+                }
+
+                otherTile.x = collisionX;
+                otherTile.y = collisionY;
+              }
+            });
           });
 
           return newTile;
