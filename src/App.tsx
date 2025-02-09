@@ -92,6 +92,25 @@ export default function App() {
     });
   }
 
+  function resolveCollisions(items: Tile[]): Tile[] {
+    let hasCollision = true;
+    while (hasCollision) {
+      hasCollision = false;
+      items = items.map((tile, idx) => {
+        let newX = tile.x;
+        let newY = tile.y;
+
+        while (isPositionOccupied(newX, newY, items, tile.id)) {
+          hasCollision = true;
+          newX += 1; // Adjust this logic as needed for your specific collision resolution strategy
+        }
+
+        return { ...tile, x: newX, y: newY };
+      });
+    }
+    return items;
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, delta } = event;
 
@@ -142,7 +161,7 @@ export default function App() {
         }
       });
 
-      return newTiles;
+      return resolveCollisions(newTiles); // Ensure no collisions remain
     });
     setActiveId(null);
     setSkeleton(null); // Clear the skeleton overlay
