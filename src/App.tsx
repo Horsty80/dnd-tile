@@ -34,7 +34,7 @@ export default function App() {
   const [items, setItems] = useState<Tile[]>([]);
   const [skeleton, setSkeleton] = useState<{ x: number; y: number } | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [moveOverlay, setMoveOverlay] = useState<{ x: number; y: number } | null>(null);
+  const [moveOverlay, setMoveOverlay] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
 
   function handleDragStart({ active }: DragStartEvent) {
     setActiveId(active.id.toString());
@@ -78,7 +78,7 @@ export default function App() {
         }
 
         if (tile.x !== newX || tile.y !== newY) {
-          setMoveOverlay({ x: collisionX, y: collisionY });
+          setMoveOverlay({ x: collisionX, y: collisionY, w: tile.w, h: tile.h });
         } else {
           setMoveOverlay(null);
         }
@@ -281,8 +281,8 @@ export default function App() {
                 backgroundColor: "rgba(0,0,0,0.2)",
                 left: skeleton.x * TILE_SIZE,
                 top: skeleton.y * TILE_SIZE,
-                width: TILE_SIZE,
-                height: TILE_SIZE,
+                width: activeId ? items.find(item => item.id === activeId)?.w : TILE_SIZE,
+                height: activeId ? items.find(item => item.id === activeId)?.h : TILE_SIZE,
                 borderRadius: "2px",
               }}
             />
@@ -294,8 +294,8 @@ export default function App() {
                 backgroundColor: "rgba(255,0,0,0.2)",
                 left: moveOverlay.x * TILE_SIZE,
                 top: moveOverlay.y * TILE_SIZE,
-                width: TILE_SIZE,
-                height: TILE_SIZE,
+                width: moveOverlay.w,
+                height: moveOverlay.h,
                 borderRadius: "2px",
               }}
             />
@@ -409,19 +409,16 @@ function Item({ id, activeId, x, y, h, w, handleEnlargeTile, handleResetTileSize
 
 function DragOverlayItem(props: { id: string }) {
   const { id } = props;
-
-  // DragOver seems to cache this component so I can't tell if the item is still actually active
-  // It will remain active until it has settled in place rather than when dragEnd has occured
-  // I need to know when drag end has taken place to trigger the scale down animation
-  // I use a hook which looks at DndContex to get active
-
-  const isReallyActive = useDndIsReallyActiveId(id);
+  const context = useDndContext();
+  const isReallyActive = context.active?.id === id;
+  const activeTile = context.active ? context.active.data.current : null;
 
   return (
     <div
       style={{
         backgroundColor: id,
-        height: "100%",
+        height: activeTile ? activeTile.h : "100%",
+        width: activeTile ? activeTile.w : "100%",
         borderRadius: 2,
         padding: 0,
         transform: isReallyActive ? "scale(1.05)" : "none",
@@ -430,11 +427,6 @@ function DragOverlayItem(props: { id: string }) {
   );
 }
 
-function useDndIsReallyActiveId(id: string) {
-  const context = useDndContext();
-  const isActive = context.active?.id === id;
-  return isActive;
-}
 
 function generateRandomHexCode() {
   let n = (Math.random() * 0xfffff * 1000000).toString(16);
