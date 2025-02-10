@@ -54,7 +54,9 @@ export default function App() {
   }
 
   // Check if a position is occupied by any tile, considering the size of the tiles
-  function isPositionOccupied(x: number, y: number, items: Tile[], ignoreTileId?: string): boolean {
+  function isTilePositionOccupied(x: number, y: number, items: Tile[], ignoreTileId?: string): boolean {
+    // This function checks if the given x,y position collides with any tile (except the ignoredTileId).
+    // Example usage: isTilePositionOccupied(5, 5, items, 'tile-123')
     const ignoredTile = items.find((item) => item.id === ignoreTileId);
     const ignoredTileWidth = ignoredTile ? ignoredTile.w : TILE_SIZE;
     const ignoredTileHeight = ignoredTile ? ignoredTile.h : TILE_SIZE;
@@ -83,12 +85,12 @@ export default function App() {
       const newX = Math.round((tile.x * TILE_SIZE + delta.x) / TILE_SIZE);
       const newY = Math.round((tile.y * TILE_SIZE + delta.y) / TILE_SIZE);
 
-      if (isPositionOccupied(newX, newY, oldItems, active.id.toString())) {
+      if (isTilePositionOccupied(newX, newY, oldItems, active.id.toString())) {
         let collisionX = newX;
         const collisionY = newY;
 
         // Push to the right
-        while (isPositionOccupied(collisionX, collisionY, oldItems, active.id.toString())) {
+        while (isTilePositionOccupied(collisionX, collisionY, oldItems, active.id.toString())) {
           collisionX += 1;
         }
         if (tile.x !== newX || tile.y !== newY) {
@@ -115,7 +117,7 @@ export default function App() {
         let newX = tile.x;
         const newY = tile.y;
 
-        while (isPositionOccupied(newX, newY, items, tile.id)) {
+        while (isTilePositionOccupied(newX, newY, items, tile.id)) {
           hasCollision = true;
           newX += 1; // Adjust this logic as needed for your specific collision resolution strategy
         }
@@ -138,12 +140,12 @@ export default function App() {
       const newX = Math.round((tile.x * TILE_SIZE + delta.x) / TILE_SIZE);
       const newY = Math.round((tile.y * TILE_SIZE + delta.y) / TILE_SIZE);
 
-      if (isPositionOccupied(newX, newY, newTiles, active.id.toString())) {
+      if (isTilePositionOccupied(newX, newY, newTiles, active.id.toString())) {
         let collisionX = newX;
         const collisionY = newY;
 
         // Push to the right
-        while (isPositionOccupied(collisionX, collisionY, newTiles, active.id.toString())) {
+        while (isTilePositionOccupied(collisionX, collisionY, newTiles, active.id.toString())) {
           collisionX += 1;
         }
 
@@ -157,7 +159,7 @@ export default function App() {
       newTiles.forEach((otherTile, otherIdx) => {
         if (
           otherIdx !== idx &&
-          isPositionOccupied(otherTile.x, otherTile.y, newTiles, otherTile.id)
+          isTilePositionOccupied(otherTile.x, otherTile.y, newTiles, otherTile.id)
         ) {
           let newOtherX = otherTile.x;
           const newOtherY = otherTile.y;
@@ -172,7 +174,7 @@ export default function App() {
           }
 
           // Ensure the new position is not occupied
-          while (isPositionOccupied(newOtherX, newOtherY, newTiles, otherTile.id)) {
+          while (isTilePositionOccupied(newOtherX, newOtherY, newTiles, otherTile.id)) {
             newOtherX += 1;
           }
 
@@ -228,7 +230,7 @@ export default function App() {
                 }
 
                 // Ensure the new position is not occupied
-                while (isPositionOccupied(collisionX, collisionY, oldItems, otherTile.id)) {
+                while (isTilePositionOccupied(collisionX, collisionY, oldItems, otherTile.id)) {
                   if (dir === "horizontal") {
                     collisionX += 1;
                   }
@@ -312,7 +314,7 @@ export default function App() {
       return;
     }
 
-    setItems([...items, { id: generateRandomHexCode(), x, y, h: TILE_SIZE, w: TILE_SIZE }]);
+    setItems([...items, { id: generateRandomColorHex(), x, y, h: TILE_SIZE, w: TILE_SIZE }]);
     setSkeleton(null);
   };
 
@@ -327,6 +329,8 @@ export default function App() {
         modifiers={[restrictToParentElement]}
       >
         <div
+        role="grid"
+        data-e2e="grid"
           style={{
             position: "relative",
             display: "grid",
@@ -506,7 +510,9 @@ function DragOverlayItem(props: { id: string }) {
 }
 
 // Generate a random hex color code
-function generateRandomHexCode() {
-  let n = (Math.random() * 0xfffff * 1000000).toString(16);
+function generateRandomColorHex() {
+  // Generates a random hex color like '#abc123'
+  // Example usage: setItems([...items, { id: generateRandomColorHex(), ... }])
+  const n = (Math.random() * 0xfffff * 1000000).toString(16);
   return "#" + n.slice(0, 6);
 }
